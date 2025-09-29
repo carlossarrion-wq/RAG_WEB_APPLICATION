@@ -40,7 +40,6 @@ const DocumentsArea: React.FC = () => {
   // Document management state
   const [uploadingFiles, setUploadingFiles] = useState<{ [dataSourceId: string]: UploadingFile[] }>({});
   const [selectedDocuments, setSelectedDocuments] = useState<{ [dataSourceId: string]: Set<string> }>({});
-  const [editingDocument, setEditingDocument] = useState<{ dataSourceId: string; documentId: string; newName: string } | null>(null);
   const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>({
     isOpen: false,
     type: 'delete',
@@ -449,40 +448,6 @@ const DocumentsArea: React.FC = () => {
     });
   };
 
-  // Handle rename document
-  const handleRenameDocument = async (dataSourceId: string, documentId: string, dataSourceIndex: number) => {
-    if (!editingDocument || !authState.user || !knowledgeBaseId) return;
-
-    try {
-      await dataSourceService.renameDocument(
-        authState.user,
-        knowledgeBaseId,
-        dataSourceId,
-        documentId,
-        editingDocument.newName
-      );
-      
-      // Refresh documents and clear editing state
-      loadDocumentsForDataSource(dataSourceIndex);
-      setEditingDocument(null);
-    } catch (error) {
-      alert(`Error al renombrar documento: ${error instanceof Error ? error.message : 'Error desconocido'}`);
-    }
-  };
-
-  // Start editing document name
-  const startEditingDocument = (dataSourceId: string, documentId: string, currentName: string) => {
-    setEditingDocument({
-      dataSourceId,
-      documentId,
-      newName: currentName
-    });
-  };
-
-  // Cancel editing
-  const cancelEditing = () => {
-    setEditingDocument(null);
-  };
 
   return (
     <div className="h-full overflow-y-auto p-6 bg-gray-50">
@@ -756,49 +721,11 @@ const DocumentsArea: React.FC = () => {
                                       {getFileTypeIcon(doc.type || '')}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      {editingDocument?.documentId === doc.id && editingDocument?.dataSourceId === dataSource.dataSourceId ? (
-                                        <div className="flex items-center space-x-2 mb-2">
-                                          <input
-                                            type="text"
-                                            value={editingDocument.newName}
-                                            onChange={(e) => setEditingDocument(prev => prev ? { ...prev, newName: e.target.value } : null)}
-                                            className="flex-1 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            onKeyDown={(e) => {
-                                              if (e.key === 'Enter') {
-                                                handleRenameDocument(dataSource.dataSourceId, doc.id, dataSourceIndex);
-                                              } else if (e.key === 'Escape') {
-                                                cancelEditing();
-                                              }
-                                            }}
-                                            autoFocus
-                                          />
-                                          <button
-                                            onClick={() => handleRenameDocument(dataSource.dataSourceId, doc.id, dataSourceIndex)}
-                                            className="text-green-600 hover:text-green-700 text-sm"
-                                          >
-                                            ✅
-                                          </button>
-                                          <button
-                                            onClick={cancelEditing}
-                                            className="text-red-600 hover:text-red-700 text-sm"
-                                          >
-                                            ❌
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <div className="flex items-center space-x-2 mb-2">
-                                          <h5 className="text-sm font-medium text-gray-900 truncate flex-1">
-                                            {doc.name}
-                                          </h5>
-                                          <button
-                                            onClick={() => startEditingDocument(dataSource.dataSourceId, doc.id, doc.name)}
-                                            className="text-gray-400 hover:text-gray-600 text-sm"
-                                            title="Editar nombre"
-                                          >
-                                            ✏️
-                                          </button>
-                                        </div>
-                                      )}
+                                      <div className="mb-2">
+                                        <h5 className="text-sm font-medium text-gray-900 truncate">
+                                          {doc.name}
+                                        </h5>
+                                      </div>
                                       <div className="flex items-center space-x-3 text-xs text-gray-500">
                                         <span>ID: {doc.id}</span>
                                         {doc.size && <span>{formatFileSize(doc.size)}</span>}
