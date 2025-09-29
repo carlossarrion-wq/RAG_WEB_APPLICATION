@@ -1,0 +1,388 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Document Management API",
+    "description": "API para gestión de documentos en AWS Bedrock Knowledge Base",
+    "version": "1.0.0"
+  },
+  "host": "zwxrsuw8o9.execute-api.eu-west-1.amazonaws.com",
+  "basePath": "/dev",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/": {
+      "post": {
+        "summary": "Chat query (funcionalidad existente)",
+        "description": "Endpoint existente para consultas de chat",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "query": {"type": "string"},
+                "model_id": {"type": "string"},
+                "knowledge_base_id": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Respuesta exitosa"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      },
+      "options": {
+        "summary": "CORS preflight",
+        "responses": {
+          "200": {
+            "description": "CORS headers",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Methods": {"type": "string"},
+              "Access-Control-Allow-Headers": {"type": "string"}
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      }
+    },
+    "/documents/{knowledgeBaseId}/{dataSourceId}": {
+      "get": {
+        "summary": "Listar documentos",
+        "description": "Obtiene la lista de documentos de un data source",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de documentos",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "documents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "string"},
+                      "name": {"type": "string"},
+                      "status": {"type": "string"},
+                      "size": {"type": "number"},
+                      "created_at": {"type": "string"},
+                      "updated_at": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      },
+      "post": {
+        "summary": "Subir documento",
+        "description": "Sube un nuevo documento al data source",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filename": {"type": "string"},
+                "file_content": {"type": "string", "description": "Base64 encoded file content"},
+                "content_type": {"type": "string"}
+              },
+              "required": ["filename", "file_content"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {"description": "Documento subido exitosamente"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      },
+      "options": {
+        "summary": "CORS preflight",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CORS headers"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      }
+    },
+    "/documents/{knowledgeBaseId}/{dataSourceId}/{documentId}": {
+      "delete": {
+        "summary": "Eliminar documento",
+        "description": "Elimina un documento específico",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {"description": "Documento eliminado exitosamente"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      },
+      "options": {
+        "summary": "CORS preflight",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {"description": "CORS headers"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      }
+    },
+    "/documents/{knowledgeBaseId}/{dataSourceId}/batch": {
+      "delete": {
+        "summary": "Eliminar documentos en lote",
+        "description": "Elimina múltiples documentos",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "document_ids": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                }
+              },
+              "required": ["document_ids"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Documentos eliminados exitosamente"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      },
+      "options": {
+        "summary": "CORS preflight",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {"description": "CORS headers"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      }
+    },
+    "/documents/{knowledgeBaseId}/{dataSourceId}/{documentId}/rename": {
+      "put": {
+        "summary": "Renombrar documento",
+        "description": "Cambia el nombre de un documento",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "new_name": {"type": "string"}
+              },
+              "required": ["new_name"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Documento renombrado exitosamente"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      },
+      "options": {
+        "summary": "CORS preflight",
+        "parameters": [
+          {
+            "name": "knowledgeBaseId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataSourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {"description": "CORS headers"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:YOUR_ACCOUNT_ID:function:bedrock-kb-query-handler/invocations"
+        }
+      }
+    }
+  }
+}

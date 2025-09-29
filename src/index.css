@@ -1,0 +1,315 @@
+/* Import dashboard styles with Tailwind */
+@import './dashboard.css';
+
+/* Reset básico para la aplicación */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Eliminar TODAS las barras de desplazamiento */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Estilos adicionales específicos para la aplicación RAG */
+.app-container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Estilos para el chat */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.chat-input-container {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  background-color: white;
+}
+
+/* Estilos para mensajes */
+.message {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+.message.user {
+  background-color: #e3f2fd;
+  margin-left: 2rem;
+  text-align: right;
+}
+
+.message.assistant {
+  background-color: white;
+  margin-right: 2rem;
+  border: 1px solid #dee2e6;
+}
+
+.message.system {
+  background-color: #f8f9fa;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Estilos para el sidebar */
+.sidebar {
+  width: 320px;
+  background-color: white;
+  border-right: 2px solid #1e4a72;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-content {
+  padding: 1rem;
+}
+
+.sidebar-section {
+  margin-bottom: 2rem;
+}
+
+.sidebar-section h3 {
+  color: #1e4a72;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+/* Estilos para formularios */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  color: #1e4a72;
+  font-size: 0.875rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #1e4a72;
+  box-shadow: 0 0 0 2px rgba(30, 74, 114, 0.25);
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #1e4a72;
+  box-shadow: 0 0 0 2px rgba(30, 74, 114, 0.25);
+}
+
+/* Estilos para el login */
+.login-container {
+  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  overflow: hidden;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.login-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-title {
+  color: #1e4a72;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+/* Utilidades adicionales */
+.text-primary {
+  color: #1e4a72;
+}
+
+.text-secondary {
+  color: #2d5aa0;
+}
+
+.text-success {
+  color: #27ae60;
+}
+
+.text-warning {
+  color: #e67e22;
+}
+
+.text-danger {
+  color: #f56565;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+.bg-primary {
+  background-color: #1e4a72;
+}
+
+.bg-secondary {
+  background-color: #2d5aa0;
+}
+
+.bg-success {
+  background-color: #27ae60;
+}
+
+.bg-warning {
+  background-color: #e67e22;
+}
+
+.bg-danger {
+  background-color: #f56565;
+}
+
+.bg-light {
+  background-color: #f8f9fa;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 2px solid #1e4a72;
+  }
+  
+  .message.user {
+    margin-left: 1rem;
+  }
+  
+  .message.assistant {
+    margin-right: 1rem;
+  }
+  
+  .login-card {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-messages {
+    padding: 0.5rem;
+  }
+  
+  .chat-input-container {
+    padding: 0.5rem;
+  }
+  
+  .message.user,
+  .message.assistant {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  .login-container {
+    padding: 0.5rem;
+  }
+  
+  .login-card {
+    padding: 1rem;
+    margin: 0;
+    max-height: calc(100vh - 1rem);
+  }
+  
+  .login-title {
+    font-size: 1.25rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.8rem;
+  }
+}
+
+/* Media query adicional para pantallas muy pequeñas */
+@media (max-width: 320px) {
+  .login-container {
+    padding: 0.25rem;
+  }
+  
+  .login-card {
+    padding: 0.75rem;
+    max-height: calc(100vh - 0.5rem);
+  }
+}

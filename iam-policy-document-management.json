@@ -1,0 +1,95 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "S3DocumentManagement",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:GetObjectVersion",
+                "s3:DeleteObjectVersion"
+            ],
+            "Resource": [
+                "arn:aws:s3:::*knowledge-base*/*",
+                "arn:aws:s3:::*knowledge-base*",
+                "arn:aws:s3:::*bedrock*/*",
+                "arn:aws:s3:::*bedrock*",
+                "arn:aws:s3:::naturgy-sdlc-kb/*",
+                "arn:aws:s3:::naturgy-sdlc-kb"
+            ]
+        },
+        {
+            "Sid": "BedrockKnowledgeBaseAccess",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:GetDataSource",
+                "bedrock:ListDataSources",
+                "bedrock:StartIngestionJob",
+                "bedrock:GetIngestionJob",
+                "bedrock:ListIngestionJobs",
+                "bedrock:GetKnowledgeBase",
+                "bedrock:ListKnowledgeBases",
+                "bedrock:Retrieve"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "BedrockAgentAccess",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock-agent:GetDataSource",
+                "bedrock-agent:ListDataSources",
+                "bedrock-agent:StartIngestionJob",
+                "bedrock-agent:GetIngestionJob",
+                "bedrock-agent:ListIngestionJobs",
+                "bedrock-agent:GetKnowledgeBase",
+                "bedrock-agent:ListKnowledgeBases"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudWatchLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "arn:aws:logs:*:*:*"
+        },
+        {
+            "Sid": "LambdaBasicExecution",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:InvokeFunction"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "BedrockRuntimeAccess",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream"
+            ],
+            "Resource": [
+                "arn:aws:bedrock:*::foundation-model/*",
+                "arn:aws:bedrock:*:*:foundation-model/*",
+                "arn:aws:bedrock:*:*:inference-profile/*"
+            ]
+        },
+        {
+            "Sid": "BedrockAgentRuntimeAccess",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock-agent-runtime:Retrieve",
+                "bedrock-agent-runtime:RetrieveAndGenerate",
+                "bedrock-agent-runtime:InvokeAgent"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
