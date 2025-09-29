@@ -14,19 +14,49 @@ logger.setLevel(logging.INFO)
 class DocumentManager:
     """Manager for document operations in S3 and Bedrock Knowledge Base."""
     
-    def __init__(self, region_name='eu-west-1'):
+    def __init__(self, region_name='eu-west-1', aws_credentials=None):
         """Initialize AWS clients."""
-        self.s3_client = boto3.client('s3', region_name=region_name)
-        self.bedrock_agent_client = boto3.client('bedrock-agent', region_name=region_name)
         self.region = region_name
         
-        # Allowed file types
+        # Initialize AWS clients with custom credentials if provided
+        if aws_credentials:
+            logger.info(f"🔐 Inicializando DocumentManager con credenciales personalizadas")
+            self.s3_client = boto3.client(
+                's3', 
+                region_name=region_name,
+                aws_access_key_id=aws_credentials['aws_access_key_id'],
+                aws_secret_access_key=aws_credentials['aws_secret_access_key'],
+                aws_session_token=aws_credentials.get('aws_session_token')
+            )
+            self.bedrock_agent_client = boto3.client(
+                'bedrock-agent', 
+                region_name=region_name,
+                aws_access_key_id=aws_credentials['aws_access_key_id'],
+                aws_secret_access_key=aws_credentials['aws_secret_access_key'],
+                aws_session_token=aws_credentials.get('aws_session_token')
+            )
+        else:
+            logger.info("⚠️ Inicializando DocumentManager con credenciales por defecto (rol de Lambda)")
+            self.s3_client = boto3.client('s3', region_name=region_name)
+            self.bedrock_agent_client = boto3.client('bedrock-agent', region_name=region_name)
+        
+        # Allowed file types - Expandido para soportar más tipos
         self.allowed_extensions = {
             '.pdf': 'application/pdf',
             '.doc': 'application/msword',
             '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             '.xls': 'application/vnd.ms-excel',
-            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            '.txt': 'text/plain',
+            '.csv': 'text/csv',
+            '.json': 'application/json',
+            '.xml': 'application/xml',
+            '.html': 'text/html',
+            '.htm': 'text/html',
+            '.md': 'text/markdown',
+            '.rtf': 'application/rtf',
+            '.ppt': 'application/vnd.ms-powerpoint',
+            '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
         }
     
     def get_data_source_config(self, knowledge_base_id, data_source_id):

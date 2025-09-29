@@ -36,7 +36,7 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-AWS-Access-Key-Id, X-AWS-Secret-Access-Key, X-AWS-Session-Token'
         }
         
         # Handle OPTIONS requests for CORS
@@ -156,8 +156,36 @@ def handle_document_request(event, context, headers):
         logger.info(f"🔍 Procesando petición de documentos: {http_method} {path}")
         logger.info(f"📋 Headers recibidos: {event.get('headers', {})}")
         
-        # Initialize DocumentManager
-        doc_manager = DocumentManager()
+        # Extract AWS credentials from headers
+        request_headers = event.get('headers', {})
+        aws_credentials = None
+        
+        # Check for AWS credentials in headers (case-insensitive)
+        access_key_id = None
+        secret_access_key = None
+        session_token = None
+        
+        for header_name, header_value in request_headers.items():
+            header_lower = header_name.lower()
+            if header_lower == 'x-aws-access-key-id':
+                access_key_id = header_value
+            elif header_lower == 'x-aws-secret-access-key':
+                secret_access_key = header_value
+            elif header_lower == 'x-aws-session-token':
+                session_token = header_value
+        
+        if access_key_id and secret_access_key:
+            aws_credentials = {
+                'aws_access_key_id': access_key_id,
+                'aws_secret_access_key': secret_access_key,
+                'aws_session_token': session_token
+            }
+            logger.info(f"🔐 Usando credenciales AWS del usuario: {access_key_id[:8]}...")
+        else:
+            logger.info("⚠️ No se encontraron credenciales AWS en headers, usando rol de Lambda")
+        
+        # Initialize DocumentManager with custom credentials
+        doc_manager = DocumentManager(aws_credentials=aws_credentials)
         
         # Parse path to extract parameters
         # Expected paths:

@@ -396,15 +396,28 @@ class DataSourceService {
 
   private async callLambdaWithAuth(user: IAMUser, method: string, path: string, body?: any): Promise<any> {
     try {
-      // Para simplificar, vamos a usar una llamada directa sin autenticación AWS Signature V4
-      // ya que el API Gateway puede estar configurado para permitir llamadas sin autenticación
       const url = `${import.meta.env.VITE_LAMBDA_URL}${path}`;
+      
+      // Preparar headers con credenciales AWS si están disponibles
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Agregar credenciales AWS como headers personalizados
+      if (user && user.accessKeyId) {
+        headers['X-AWS-Access-Key-Id'] = user.accessKeyId;
+        headers['X-AWS-Secret-Access-Key'] = user.secretAccessKey;
+        if (user.sessionToken) {
+          headers['X-AWS-Session-Token'] = user.sessionToken;
+        }
+        console.log(`🔐 Usando credenciales AWS para usuario: ${user.accessKeyId.substring(0, 8)}...`);
+      } else {
+        console.log(`⚠️ No hay credenciales AWS disponibles, intentando sin autenticación`);
+      }
       
       const requestOptions: RequestInit = {
         method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       };
 
       if (body && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
@@ -412,17 +425,24 @@ class DataSourceService {
       }
 
       console.log(`🌐 Llamando a Lambda: ${method} ${url}`);
+      console.log(`📋 Headers enviados:`, Object.keys(headers));
       
       const response = await fetch(url, requestOptions);
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`❌ Error en Lambda: ${response.status} - ${errorText}`);
+        
+        // Si es error 403 y no tenemos credenciales, es problema de autenticación
+        if (response.status === 403 && !user?.accessKeyId) {
+          throw new Error(`Authentication required: Please ensure you are logged in with valid AWS credentials`);
+        }
+        
         throw new Error(`Lambda call failed: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log(`✅ Respuesta de Lambda:`, data);
+      console.log(`✅ Respuesta de Lambda exitosa - ${data.documents?.length || 0} documentos`);
       return data;
       
     } catch (error) {
