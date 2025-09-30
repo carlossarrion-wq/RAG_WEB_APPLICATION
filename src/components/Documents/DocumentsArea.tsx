@@ -27,6 +27,7 @@ interface ConfirmationModal {
   documentId?: string;
   documentIds?: string[];
   dataSourceIndex?: number;
+  isDeleting?: boolean;
   onConfirm: () => void;
 }
 
@@ -393,9 +394,13 @@ const DocumentsArea: React.FC = () => {
       message: '¿Estás seguro de que quieres eliminar este documento? Esta acción no se puede deshacer.',
       documentId,
       dataSourceIndex,
+      isDeleting: false,
       onConfirm: async () => {
         try {
           if (!authState.user || !knowledgeBaseId) return;
+          
+          // Set deleting state
+          setConfirmationModal(prev => ({ ...prev, isDeleting: true }));
           
           await dataSourceService.deleteDocument(
             authState.user,
@@ -404,10 +409,23 @@ const DocumentsArea: React.FC = () => {
             documentId
           );
           
-          // Refresh documents
-          loadDocumentsForDataSource(dataSourceIndex);
-          setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+          // Show success message briefly
+          setConfirmationModal(prev => ({ 
+            ...prev, 
+            title: '✅ Documento eliminado',
+            message: 'El documento se ha eliminado correctamente.',
+            isDeleting: false
+          }));
+          
+          // Close modal after showing success
+          setTimeout(() => {
+            setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+            // Refresh documents
+            loadDocumentsForDataSource(dataSourceIndex);
+          }, 1500);
+          
         } catch (error) {
+          setConfirmationModal(prev => ({ ...prev, isDeleting: false }));
           alert(`Error al eliminar documento: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
       }
@@ -426,9 +444,13 @@ const DocumentsArea: React.FC = () => {
       message: `¿Estás seguro de que quieres eliminar ${selectedIds.length} documento(s)? Esta acción no se puede deshacer.`,
       documentIds: selectedIds,
       dataSourceIndex,
+      isDeleting: false,
       onConfirm: async () => {
         try {
           if (!authState.user || !knowledgeBaseId) return;
+          
+          // Set deleting state
+          setConfirmationModal(prev => ({ ...prev, isDeleting: true }));
           
           await dataSourceService.deleteDocumentsBatch(
             authState.user,
@@ -437,11 +459,24 @@ const DocumentsArea: React.FC = () => {
             selectedIds
           );
           
-          // Clear selection and refresh documents
-          setSelectedDocuments(prev => ({ ...prev, [dataSourceId]: new Set() }));
-          loadDocumentsForDataSource(dataSourceIndex);
-          setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+          // Show success message briefly
+          setConfirmationModal(prev => ({ 
+            ...prev, 
+            title: '✅ Documentos eliminados',
+            message: `Se han eliminado ${selectedIds.length} documento(s) correctamente.`,
+            isDeleting: false
+          }));
+          
+          // Close modal after showing success
+          setTimeout(() => {
+            setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+            // Clear selection and refresh documents
+            setSelectedDocuments(prev => ({ ...prev, [dataSourceId]: new Set() }));
+            loadDocumentsForDataSource(dataSourceIndex);
+          }, 1500);
+          
         } catch (error) {
+          setConfirmationModal(prev => ({ ...prev, isDeleting: false }));
           alert(`Error al eliminar documentos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
       }
@@ -820,6 +855,7 @@ const DocumentsArea: React.FC = () => {
                     onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
                     variant="secondary"
                     size="sm"
+                    disabled={confirmationModal.isDeleting}
                   >
                     Cancelar
                   </Button>
@@ -827,9 +863,20 @@ const DocumentsArea: React.FC = () => {
                     onClick={confirmationModal.onConfirm}
                     variant="primary"
                     size="sm"
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    className="bg-red-600 hover:bg-red-700 text-white flex items-center space-x-2"
+                    disabled={confirmationModal.isDeleting}
                   >
-                    {confirmationModal.type === 'bulkDelete' ? 'Eliminar todos' : 'Eliminar'}
+                    {confirmationModal.isDeleting && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    )}
+                    <span>
+                      {confirmationModal.isDeleting 
+                        ? 'Eliminando...' 
+                        : confirmationModal.type === 'bulkDelete' 
+                          ? 'Eliminar todos' 
+                          : 'Eliminar'
+                      }
+                    </span>
                   </Button>
                 </div>
               </div>

@@ -31,20 +31,27 @@ def lambda_handler(event, context):
         
         logger.info(f"Processing {http_method} request to {path}")
         
-        # Common headers for all responses
+        # Common headers for all responses with comprehensive CORS support
         headers = {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-AWS-Access-Key-Id, X-AWS-Secret-Access-Key, X-AWS-Session-Token'
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-AWS-Access-Key-Id, X-AWS-Secret-Access-Key, X-AWS-Session-Token, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
+            'Access-Control-Allow-Credentials': 'false',
+            'Access-Control-Max-Age': '86400'
         }
         
-        # Handle OPTIONS requests for CORS
+        # Handle OPTIONS requests for CORS - ALWAYS return 200 regardless of path
         if http_method == 'OPTIONS':
+            logger.info(f"Handling OPTIONS request for path: {path}")
             return {
                 'statusCode': 200,
                 'headers': headers,
-                'body': json.dumps({'message': 'CORS preflight'})
+                'body': json.dumps({
+                    'message': 'CORS preflight successful',
+                    'path': path,
+                    'method': http_method
+                })
             }
         
         # Route requests based on path and method
@@ -74,7 +81,8 @@ def handle_chat_request(event, context, headers):
         logger.info("Starting knowledge base query processing")
         
         # Parse request parameters
-        body = json.loads(event.get('body', '{}'))
+        body_str = event.get('body') or '{}'
+        body = json.loads(body_str)
         query = body.get('query', '')
         model_id = body.get('model_id', 'anthropic.claude-sonnet-4-20250514-v1:0')
         knowledge_base_id = body.get('knowledge_base_id', 'TJ8IMVJVQW')  # ID por defecto
@@ -154,6 +162,20 @@ def handle_document_request(event, context, headers):
         path_parameters = event.get('pathParameters') or {}
         
         logger.info(f"🔍 Procesando petición de documentos: {http_method} {path}")
+        
+        # Handle OPTIONS requests immediately for CORS - don't process document logic
+        if http_method == 'OPTIONS':
+            logger.info(f"Handling document OPTIONS request for path: {path}")
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'message': 'CORS preflight successful',
+                    'path': path,
+                    'method': http_method
+                })
+            }
+        
         logger.info(f"📋 Headers recibidos: {event.get('headers', {})}")
         
         # Extract AWS credentials from headers
@@ -249,7 +271,8 @@ def handle_document_request(event, context, headers):
             
         elif http_method == 'POST':
             # Upload document
-            body = json.loads(event.get('body', '{}'))
+            body_str = event.get('body') or '{}'
+            body = json.loads(body_str)
             
             # Handle file upload - expect base64 encoded content
             filename = body.get('filename')
@@ -291,7 +314,8 @@ def handle_document_request(event, context, headers):
             if len(path_parts) >= 4:
                 if path_parts[3] == 'batch':
                     # Batch delete
-                    body = json.loads(event.get('body', '{}'))
+                    body_str = event.get('body') or '{}'
+                    body = json.loads(body_str)
                     document_ids = body.get('document_ids', [])
                     
                     if not document_ids:
@@ -337,7 +361,8 @@ def handle_document_request(event, context, headers):
             if len(path_parts) >= 5 and path_parts[4] == 'rename':
                 # Rename document
                 document_id = unquote(path_parts[3])
-                body = json.loads(event.get('body', '{}'))
+                body_str = event.get('body') or '{}'
+                body = json.loads(body_str)
                 new_name = body.get('new_name')
                 
                 if not new_name:

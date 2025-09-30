@@ -159,24 +159,16 @@ class DataSourceService {
       // Convert file to base64
       const fileContent = await this.fileToBase64(file);
       
-      const response = await fetch(`${import.meta.env.VITE_LAMBDA_URL}/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const result = await this.callLambdaWithAuth(
+        user,
+        'POST',
+        `/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}`,
+        {
           filename: file.name,
           file_content: fileContent,
           content_type: file.type || 'application/octet-stream',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+        }
+      );
       
       return {
         id: result.document_id,
@@ -200,17 +192,11 @@ class DataSourceService {
     try {
       console.log(`Deleting document ${documentId} from data source ${dataSourceId}`);
       
-      const response = await fetch(`${import.meta.env.VITE_LAMBDA_URL}/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}/${encodeURIComponent(documentId)}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
+      await this.callLambdaWithAuth(
+        user,
+        'DELETE',
+        `/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}/${encodeURIComponent(documentId)}`
+      );
       
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -222,20 +208,12 @@ class DataSourceService {
     try {
       console.log(`Batch deleting ${documentIds.length} documents from data source ${dataSourceId}`);
       
-      const response = await fetch(`${import.meta.env.VITE_LAMBDA_URL}/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}/batch`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          document_ids: documentIds,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
+      await this.callLambdaWithAuth(
+        user,
+        'DELETE',
+        `/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}/batch`,
+        { document_ids: documentIds }
+      );
       
     } catch (error) {
       console.error('Error batch deleting documents:', error);
@@ -247,20 +225,12 @@ class DataSourceService {
     try {
       console.log(`Renaming document ${documentId} to ${newName}`);
       
-      const response = await fetch(`${import.meta.env.VITE_LAMBDA_URL}/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}/${encodeURIComponent(documentId)}/rename`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          new_name: newName,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
+      await this.callLambdaWithAuth(
+        user,
+        'PUT',
+        `/documents/${encodeURIComponent(knowledgeBaseId)}/${encodeURIComponent(dataSourceId)}/${encodeURIComponent(documentId)}/rename`,
+        { new_name: newName }
+      );
       
     } catch (error) {
       console.error('Error renaming document:', error);
@@ -429,6 +399,9 @@ class DataSourceService {
       
       const response = await fetch(url, requestOptions);
       
+      console.log(`📡 Respuesta HTTP: ${response.status} ${response.statusText}`);
+      console.log(`📋 Headers de respuesta:`, Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`❌ Error en Lambda: ${response.status} - ${errorText}`);
@@ -438,15 +411,42 @@ class DataSourceService {
           throw new Error(`Authentication required: Please ensure you are logged in with valid AWS credentials`);
         }
         
+        // Si es error CORS, dar mensaje específico
+        if (response.status === 0 || errorText.includes('CORS')) {
+          throw new Error(`CORS error: The request was blocked by CORS policy. Check API Gateway configuration.`);
+        }
+        
         throw new Error(`Lambda call failed: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
-      console.log(`✅ Respuesta de Lambda exitosa - ${data.documents?.length || 0} documentos`);
-      return data;
+      // Intentar parsear la respuesta como JSON
+      const responseText = await response.text();
+      console.log(`📄 Respuesta raw:`, responseText);
+      
+      try {
+        const data = JSON.parse(responseText);
+        console.log(`✅ Respuesta de Lambda exitosa - ${data.documents?.length || 0} documentos`);
+        return data;
+      } catch (parseError) {
+        console.error(`❌ Error parseando JSON:`, parseError);
+        console.log(`📄 Respuesta que no se pudo parsear:`, responseText);
+        
+        // Si la respuesta no es JSON válido, pero el status es OK, devolver la respuesta raw
+        if (responseText.trim() === '') {
+          return { success: true, message: 'Operation completed successfully' };
+        }
+        
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
       
     } catch (error) {
       console.error('❌ Error en callLambdaWithAuth:', error);
+      
+      // Si es un error de red (fetch failed), dar mensaje específico
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error(`Network error: Failed to connect to Lambda endpoint. Check your internet connection and Lambda URL.`);
+      }
+      
       throw error;
     }
   }

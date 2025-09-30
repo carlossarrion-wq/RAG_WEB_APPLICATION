@@ -3,6 +3,8 @@ import json
 import logging
 import os
 import uuid
+import unicodedata
+import re
 from datetime import datetime
 from botocore.exceptions import ClientError
 from urllib.parse import unquote
@@ -13,6 +15,27 @@ logger.setLevel(logging.INFO)
 
 class DocumentManager:
     """Manager for document operations in S3 and Bedrock Knowledge Base."""
+    
+    def _sanitize_filename_for_metadata(self, filename):
+        """
+        Sanitize filename to contain only ASCII characters for S3 metadata.
+        Converts accented characters to their ASCII equivalents and removes non-ASCII chars.
+        """
+        try:
+            # Normalize unicode characters (NFD = decomposed form)
+            normalized = unicodedata.normalize('NFD', filename)
+            # Filter out non-ASCII characters, keeping only ASCII
+            ascii_filename = ''.join(c for c in normalized if ord(c) < 128)
+            # Clean up any remaining problematic characters
+            ascii_filename = re.sub(r'[^\w\s\-_\.]', '', ascii_filename)
+            # Replace multiple spaces/underscores with single ones
+            ascii_filename = re.sub(r'[\s_]+', '_', ascii_filename)
+            return ascii_filename.strip('_')
+        except Exception as e:
+            logger.warning(f"Error sanitizing filename '{filename}': {str(e)}")
+            # Fallback: create a simple ASCII filename
+            name, ext = os.path.splitext(filename)
+            return f"document_{uuid.uuid4().hex[:8]}{ext}"
     
     def __init__(self, region_name='eu-west-1', aws_credentials=None):
         """Initialize AWS clients."""
@@ -183,6 +206,10 @@ class DocumentManager:
             safe_filename = filename.replace(' ', '_')
             s3_key = f"{prefix}{timestamp}_{safe_filename}" if prefix else f"{timestamp}_{safe_filename}"
             
+            # Sanitize filename for S3 metadata (ASCII only)
+            sanitized_filename = self._sanitize_filename_for_metadata(filename)
+            logger.info(f"Original filename: '{filename}' -> Sanitized: '{sanitized_filename}'")
+            
             # Upload to S3
             self.s3_client.put_object(
                 Bucket=bucket_name,
@@ -190,11 +217,13 @@ class DocumentManager:
                 Body=file_content,
                 ContentType=content_type,
                 Metadata={
-                    'original_filename': filename,
+                    'original_filename': sanitized_filename,  # Use sanitized version for metadata
                     'uploaded_at': datetime.now().isoformat(),
                     'data_source_id': data_source_id,
                     'knowledge_base_id': knowledge_base_id
-                }
+                },
+                # Store original filename in S3 object tags (supports Unicode)
+                Tagging=f'original_name={filename.replace("=", "%3D").replace("&", "%26")}'
             )
             
             # Trigger Knowledge Base sync (optional - KB will sync automatically)
@@ -246,16 +275,29 @@ class DocumentManager:
             )
             
             # Trigger Knowledge Base sync
+            ingestion_job_id = None
             try:
-                self.bedrock_agent_client.start_ingestion_job(
+                response = self.bedrock_agent_client.start_ingestion_job(
                     knowledgeBaseId=knowledge_base_id,
                     dataSourceId=data_source_id
                 )
-                logger.info(f"Started ingestion job for data source {data_source_id}")
+                ingestion_job_id = response.get('ingestionJob', {}).get('ingestionJobId')
+                logger.info(f"Started ingestion job {ingestion_job_id} for data source {data_source_id}")
             except Exception as e:
                 logger.warning(f"Could not start ingestion job: {str(e)}")
             
             logger.info(f"Document {document_id} deleted successfully")
+            
+            # Return success response
+            return {
+                'success': True,
+                'message': 'Document deleted successfully',
+                'document_id': document_id,
+                'knowledge_base_id': knowledge_base_id,
+                'data_source_id': data_source_id,
+                'ingestion_job_id': ingestion_job_id,
+                'deleted_at': datetime.now().isoformat()
+            }
             
         except Exception as e:
             logger.error(f"Error deleting document: {str(e)}")
@@ -285,20 +327,38 @@ class DocumentManager:
             )
             
             # Check for errors
-            if 'Errors' in response and response['Errors']:
-                logger.error(f"Some documents could not be deleted: {response['Errors']}")
+            deleted_count = len(response.get('Deleted', []))
+            errors = response.get('Errors', [])
+            
+            if errors:
+                logger.error(f"Some documents could not be deleted: {errors}")
             
             # Trigger Knowledge Base sync
+            ingestion_job_id = None
             try:
-                self.bedrock_agent_client.start_ingestion_job(
+                sync_response = self.bedrock_agent_client.start_ingestion_job(
                     knowledgeBaseId=knowledge_base_id,
                     dataSourceId=data_source_id
                 )
-                logger.info(f"Started ingestion job for data source {data_source_id}")
+                ingestion_job_id = sync_response.get('ingestionJob', {}).get('ingestionJobId')
+                logger.info(f"Started ingestion job {ingestion_job_id} for data source {data_source_id}")
             except Exception as e:
                 logger.warning(f"Could not start ingestion job: {str(e)}")
             
-            logger.info(f"Batch delete completed for {len(document_ids)} documents")
+            logger.info(f"Batch delete completed: {deleted_count} documents deleted, {len(errors)} errors")
+            
+            # Return success response
+            return {
+                'success': True,
+                'message': f'Batch delete completed: {deleted_count} documents deleted',
+                'deleted_count': deleted_count,
+                'requested_count': len(document_ids),
+                'errors': errors,
+                'knowledge_base_id': knowledge_base_id,
+                'data_source_id': data_source_id,
+                'ingestion_job_id': ingestion_job_id,
+                'deleted_at': datetime.now().isoformat()
+            }
             
         except Exception as e:
             logger.error(f"Error deleting documents batch: {str(e)}")
@@ -334,17 +394,23 @@ class DocumentManager:
                 'Key': document_id
             }
             
+            # Sanitize new filename for S3 metadata
+            sanitized_new_name = self._sanitize_filename_for_metadata(new_name)
+            logger.info(f"Renaming - Original: '{new_name}' -> Sanitized: '{sanitized_new_name}'")
+            
             self.s3_client.copy_object(
                 CopySource=copy_source,
                 Bucket=bucket_name,
                 Key=new_s3_key,
                 MetadataDirective='REPLACE',
                 Metadata={
-                    'original_filename': new_name,
+                    'original_filename': sanitized_new_name,  # Use sanitized version
                     'renamed_at': datetime.now().isoformat(),
                     'data_source_id': data_source_id,
                     'knowledge_base_id': knowledge_base_id
-                }
+                },
+                # Store original filename in S3 object tags
+                Tagging=f'original_name={new_name.replace("=", "%3D").replace("&", "%26")}'
             )
             
             # Delete old object
@@ -354,21 +420,29 @@ class DocumentManager:
             )
             
             # Trigger Knowledge Base sync
+            ingestion_job_id = None
             try:
-                self.bedrock_agent_client.start_ingestion_job(
+                response = self.bedrock_agent_client.start_ingestion_job(
                     knowledgeBaseId=knowledge_base_id,
                     dataSourceId=data_source_id
                 )
-                logger.info(f"Started ingestion job for data source {data_source_id}")
+                ingestion_job_id = response.get('ingestionJob', {}).get('ingestionJobId')
+                logger.info(f"Started ingestion job {ingestion_job_id} for data source {data_source_id}")
             except Exception as e:
                 logger.warning(f"Could not start ingestion job: {str(e)}")
             
             logger.info(f"Document renamed successfully from {document_id} to {new_s3_key}")
             
             return {
+                'success': True,
+                'message': 'Document renamed successfully',
                 'old_id': document_id,
                 'new_id': new_s3_key,
-                'new_name': new_name
+                'new_name': new_name,
+                'knowledge_base_id': knowledge_base_id,
+                'data_source_id': data_source_id,
+                'ingestion_job_id': ingestion_job_id,
+                'renamed_at': datetime.now().isoformat()
             }
             
         except Exception as e:

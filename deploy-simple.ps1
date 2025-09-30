@@ -2,7 +2,7 @@
 Write-Host "Desplegando sistema de gestion de documentos..." -ForegroundColor Green
 
 $LAMBDA_FUNCTION_NAME = "bedrock-kb-query-handler"
-$ZIP_FILE = "lambda-function-20250929-090015.zip"
+$ZIP_FILE = "lambda-function-20250930-165902.zip"
 $REGION = "eu-west-1"
 
 # Verificar archivo ZIP
