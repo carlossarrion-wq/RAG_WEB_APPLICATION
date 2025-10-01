@@ -9,6 +9,54 @@ const MainLayout: React.FC = () => {
   const { logout, authState } = useAuth();
   const [activeSection, setActiveSection] = useState('chat');
 
+  // Log información del usuario para debugging
+  React.useEffect(() => {
+    if (authState.user) {
+      console.log('👤 Información del usuario en MainLayout:', {
+        userName: authState.user.userName,
+        firstName: authState.user.firstName,
+        lastName: authState.user.lastName,
+        fullName: authState.user.fullName,
+        displayName: authState.user.displayName,
+        email: authState.user.email,
+        userArn: authState.user.userArn
+      });
+    }
+  }, [authState.user]);
+
+  const getUserDisplayName = (): string => {
+    if (!authState.user) return 'Usuario';
+    
+    // Prioridad: displayName > fullName > firstName lastName > userName > fallback
+    if (authState.user.displayName) {
+      console.log('🎭 Usando displayName:', authState.user.displayName);
+      return authState.user.displayName;
+    }
+    
+    if (authState.user.fullName) {
+      console.log('📝 Usando fullName:', authState.user.fullName);
+      return authState.user.fullName;
+    }
+    
+    if (authState.user.firstName || authState.user.lastName) {
+      const name = `${authState.user.firstName || ''} ${authState.user.lastName || ''}`.trim();
+      console.log('👥 Usando firstName + lastName:', name);
+      return name;
+    }
+    
+    if (authState.user.userName) {
+      console.log('🔤 Usando userName:', authState.user.userName);
+      return authState.user.userName;
+    }
+    
+    // Fallback: extraer del ARN o usar Access Key
+    const fallback = authState.user.userArn?.split('/').pop() || 
+                    authState.user.accessKeyId?.substring(0, 8) + '...' || 
+                    'Usuario';
+    console.log('🔄 Usando fallback:', fallback);
+    return fallback;
+  };
+
   const handleLogout = () => {
     logout();
   };
@@ -39,7 +87,7 @@ const MainLayout: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                Bienvenido, {authState.user?.userArn?.split('/').pop() || authState.user?.accessKeyId?.substring(0, 8) + '...' || 'Usuario'}
+                Bienvenido, {getUserDisplayName()}
               </span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Cerrar Sesión

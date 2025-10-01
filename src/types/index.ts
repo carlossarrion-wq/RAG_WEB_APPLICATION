@@ -9,6 +9,13 @@ export interface IAMUser {
   userArn?: string;
   userId?: string;
   sessionToken?: string;
+  // Información adicional del usuario
+  userName?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  email?: string;
+  displayName?: string;
 }
 
 // Authentication State

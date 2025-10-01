@@ -4,6 +4,7 @@ import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
 import type { AuthState, IAMUser, LoginFormData } from '../types';
 import { createLogger } from '../config';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../types';
+import { createUserService } from '../services/userService';
 
 const logger = createLogger('AuthContext');
 
@@ -146,23 +147,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🔐 Respuesta completa del inicio de sesión AWS STS:', response);
 
       if (response.Arn && response.UserId) {
-        const iamUser: IAMUser = {
+        const baseUser: IAMUser = {
           ...credentials,
           userArn: response.Arn,
           userId: response.UserId,
         };
 
-        // Guardar credenciales en localStorage
-        localStorage.setItem('aws-credentials', JSON.stringify(iamUser));
+        console.log('🎯 Iniciando obtención de información completa del usuario...');
+        
+        // Obtener información completa del usuario usando UserService
+        try {
+          const userService = createUserService(
+            {
+              accessKeyId,
+              secretAccessKey,
+              sessionToken: credentials.sessionToken,
+            },
+            region
+          );
 
-        setAuthState({
-          isAuthenticated: true,
-          user: iamUser,
-          error: null,
-          loading: false,
-        });
+          const enhancedUser = await userService.getUserInfo(baseUser);
+          
+          console.log('✅ Usuario con información completa:', enhancedUser);
 
-        logger.info('Autenticación exitosa:', response.Arn);
+          // Guardar credenciales completas en localStorage
+          localStorage.setItem('aws-credentials', JSON.stringify(enhancedUser));
+
+          setAuthState({
+            isAuthenticated: true,
+            user: enhancedUser,
+            error: null,
+            loading: false,
+          });
+
+          logger.info('Autenticación exitosa con información completa:', response.Arn);
+          
+        } catch (userServiceError) {
+          console.log('⚠️ Error obteniendo información adicional del usuario:', userServiceError);
+          console.log('📝 Continuando con información básica...');
+          
+          // Si falla la obtención de información adicional, usar la información básica
+          localStorage.setItem('aws-credentials', JSON.stringify(baseUser));
+
+          setAuthState({
+            isAuthenticated: true,
+            user: baseUser,
+            error: null,
+            loading: false,
+          });
+
+          logger.info('Autenticación exitosa (información básica):', response.Arn);
+        }
       } else {
         throw new Error('Respuesta inválida de AWS STS');
       }
