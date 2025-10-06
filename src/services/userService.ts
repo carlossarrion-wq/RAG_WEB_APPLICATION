@@ -159,7 +159,12 @@ export class UserService {
           if (tagsResponse.Tags && tagsResponse.Tags.length > 0) {
             const userInfoFromTags = this.parseUserTags(tagsResponse.Tags);
             enhancedUser = { ...enhancedUser, ...userInfoFromTags };
+            
+            // IMPORTANTE: Guardar el array completo de tags para uso posterior
+            enhancedUser.tags = tagsResponse.Tags;
+            
             console.log('📊 Información extraída de tags:', userInfoFromTags);
+            console.log('🏷️ Tags completos guardados:', tagsResponse.Tags);
           } else {
             console.log('⚠️ No se encontraron tags para el usuario');
           }

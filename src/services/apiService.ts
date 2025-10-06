@@ -70,13 +70,61 @@ const formatQueryWithHistory = (
  */
 const getAuthHeaders = async (): Promise<Record<string, string>> => {
   try {
-    // Para IAM, podríamos usar las credenciales almacenadas para firmar requests
-    // Por ahora usamos API Key
-    
-    return {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'x-api-key': appConfig.api.apiKey,
     };
+    
+    // Incluir información del usuario desde localStorage si está disponible
+    const storedCredentials = localStorage.getItem('aws-credentials');
+    if (storedCredentials) {
+      try {
+        const credentials = JSON.parse(storedCredentials);
+        
+        // Añadir información del usuario a los headers de forma segura
+        if (credentials && typeof credentials === 'object') {
+          if (credentials.userName) {
+            headers['x-user-name'] = String(credentials.userName);
+          }
+          if (credentials.userArn) {
+            headers['x-user-arn'] = String(credentials.userArn);
+          }
+          if (credentials.groups && Array.isArray(credentials.groups) && credentials.groups.length > 0) {
+            headers['x-user-group'] = String(credentials.groups[0]);
+          }
+          if (credentials.tags && Array.isArray(credentials.tags)) {
+            // Buscar etiquetas Person y Team de forma segura
+            try {
+              const personTag = credentials.tags.find((tag: any) => 
+                tag && tag.Key && typeof tag.Key === 'string' && tag.Key.toLowerCase() === 'person'
+              );
+              const teamTag = credentials.tags.find((tag: any) => 
+                tag && tag.Key && typeof tag.Key === 'string' && tag.Key.toLowerCase() === 'team'
+              );
+              
+              if (personTag && personTag.Value) {
+                headers['x-user-person'] = String(personTag.Value);
+              }
+              if (teamTag && teamTag.Value) {
+                headers['x-user-team'] = String(teamTag.Value);
+              }
+            } catch (tagError) {
+              logger.warn('Error procesando tags de usuario:', tagError);
+            }
+          }
+          
+          logger.debug('Headers de usuario añadidos:', {
+            userName: headers['x-user-name'] || 'no disponible',
+            person: headers['x-user-person'] || 'no disponible',
+            team: headers['x-user-team'] || 'no disponible'
+          });
+        }
+      } catch (parseError) {
+        logger.warn('Error parseando credenciales almacenadas:', parseError);
+      }
+    }
+    
+    return headers;
   } catch (error) {
     logger.error('Error getting auth headers:', error);
     return {

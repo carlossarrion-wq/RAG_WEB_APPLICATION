@@ -16,6 +16,8 @@ export interface IAMUser {
   fullName?: string;
   email?: string;
   displayName?: string;
+  // Tags IAM del usuario (para Person, Team, etc.)
+  tags?: Array<{ Key?: string; Value?: string }>;
 }
 
 // Authentication State
