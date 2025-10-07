@@ -14,7 +14,7 @@ interface Message {
 }
 
 const ChatArea: React.FC = () => {
-  const { messages, setMessages, resetConversation, addMessage } = useChat();
+  const { messages, setMessages, resetConversation } = useChat();
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isHealthy, setIsHealthy] = useState<boolean | null>(null);
@@ -102,11 +102,30 @@ const ChatArea: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Header with Status */}
-      <div className="border-b border-gray-200 p-4 bg-white">
+      <div 
+        className="p-6"
+        style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
+        }}
+      >
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Chat RAG</h3>
-            <p className="text-sm text-gray-600">Pregunta cualquier cosa sobre la base de conocimientos</p>
+            <h3 
+              className="text-xl font-semibold"
+              style={{
+                background: 'linear-gradient(135deg, #319795 0%, #2c7a7b 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              Chat RAG
+            </h3>
+            <p className="text-sm" style={{ color: '#718096' }}>
+              Pregunta cualquier cosa sobre la base de conocimientos
+            </p>
           </div>
           
           <div className="flex items-center space-x-3">
@@ -114,11 +133,20 @@ const ChatArea: React.FC = () => {
             <button
               onClick={handleResetConversation}
               disabled={messages.length <= 1}
-              className={`p-2 rounded-lg transition-colors ${
-                messages.length <= 1
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-red-600 hover:bg-red-50 hover:text-red-700'
-              }`}
+              className="p-2 rounded-lg transition-all"
+              style={{
+                color: messages.length <= 1 ? '#a0aec0' : '#e53e3e',
+                cursor: messages.length <= 1 ? 'not-allowed' : 'pointer',
+                opacity: messages.length <= 1 ? 0.5 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (messages.length > 1) {
+                  e.currentTarget.style.background = 'rgba(229, 62, 62, 0.1)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
               title="Resetear conversación"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -129,20 +157,31 @@ const ChatArea: React.FC = () => {
               </svg>
             </button>
             
-            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
-              isHealthy === null 
-                ? 'bg-gray-100 text-gray-600' 
-                : isHealthy 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${
-                isHealthy === null 
-                  ? 'bg-gray-400' 
+            <div 
+              className="flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-medium"
+              style={{
+                background: isHealthy === null 
+                  ? 'rgba(160, 174, 192, 0.15)' 
                   : isHealthy 
-                    ? 'bg-green-500' 
-                    : 'bg-red-500'
-              }`}></div>
+                    ? 'rgba(56, 178, 172, 0.15)' 
+                    : 'rgba(229, 62, 62, 0.15)',
+                color: isHealthy === null 
+                  ? '#718096' 
+                  : isHealthy 
+                    ? '#2c7a7b' 
+                    : '#c53030'
+              }}
+            >
+              <div 
+                className="w-2 h-2 rounded-full"
+                style={{
+                  background: isHealthy === null 
+                    ? '#a0aec0' 
+                    : isHealthy 
+                      ? '#38b2ac' 
+                      : '#e53e3e'
+                }}
+              ></div>
               <span>
                 {isHealthy === null ? 'Verificando...' : isHealthy ? 'Conectado' : 'Desconectado'}
               </span>
@@ -152,21 +191,40 @@ const ChatArea: React.FC = () => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        className="flex-1 overflow-y-auto p-6 space-y-4"
+        style={{
+          background: '#f8f9fa'
+        }}
+      >
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.isUser
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-200 text-gray-900'
-              }`}
+              className="max-w-xs lg:max-w-md px-4 py-3 transition-all"
+              style={{
+                background: message.isUser
+                  ? 'linear-gradient(135deg, #319795 0%, #2c7a7b 100%)'
+                  : 'rgba(255, 255, 255, 0.95)',
+                color: message.isUser ? 'white' : '#2d3748',
+                borderRadius: '16px',
+                boxShadow: message.isUser
+                  ? '0 4px 15px rgba(49, 151, 149, 0.3)'
+                  : '0 4px 15px rgba(0, 0, 0, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: message.isUser ? 'none' : '1px solid rgba(0, 0, 0, 0.05)'
+              }}
             >
-              <p className="text-sm">{message.content}</p>
-              <p className="text-xs mt-1 opacity-70">
+              <p className="text-sm" style={{ lineHeight: '1.5' }}>{message.content}</p>
+              <p 
+                className="text-xs mt-1"
+                style={{ 
+                  opacity: 0.7,
+                  color: message.isUser ? 'rgba(255, 255, 255, 0.9)' : '#718096'
+                }}
+              >
                 {message.timestamp.toLocaleTimeString()}
               </p>
             </div>
@@ -175,14 +233,33 @@ const ChatArea: React.FC = () => {
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-200 text-gray-900 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
+            <div 
+              className="max-w-xs lg:max-w-md px-4 py-3"
+              style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                color: '#2d3748',
+                borderRadius: '16px',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(0, 0, 0, 0.05)'
+              }}
+            >
               <div className="flex items-center space-x-2">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{ background: '#319795' }}
+                  ></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{ background: '#319795', animationDelay: '0.1s' }}
+                  ></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{ background: '#319795', animationDelay: '0.2s' }}
+                  ></div>
                 </div>
-                <span className="text-xs text-gray-600">Escribiendo...</span>
+                <span className="text-xs" style={{ color: '#718096' }}>Escribiendo...</span>
               </div>
             </div>
           </div>
@@ -190,7 +267,14 @@ const ChatArea: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 p-4">
+      <div 
+        className="p-6"
+        style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '1px solid rgba(0, 0, 0, 0.1)'
+        }}
+      >
         <div className="flex space-x-2">
           <div className="flex-1">
             <Input
@@ -209,7 +293,7 @@ const ChatArea: React.FC = () => {
             Enviar
           </Button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs mt-2" style={{ color: '#a0aec0' }}>
           Presiona Enter para enviar, Shift+Enter para nueva línea
         </p>
       </div>

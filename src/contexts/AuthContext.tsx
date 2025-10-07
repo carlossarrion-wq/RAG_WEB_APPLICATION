@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
-import type { AuthState, IAMUser, LoginFormData } from '../types';
+import type { AuthState, IAMUser } from '../types';
 import { createLogger } from '../config';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../types';
+import { ERROR_MESSAGES } from '../types';
 import { createUserService } from '../services/userService';
 
 const logger = createLogger('AuthContext');
@@ -241,12 +241,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       logger.info('Cerrando sesión...');
+      
+      // Limpiar credenciales AWS
       localStorage.removeItem('aws-credentials');
+      
+      // Limpiar conversation_id y mensajes del chat
+      localStorage.removeItem('conversation-id');
+      localStorage.removeItem('chat-messages');
+      
       setAuthState(defaultAuthState);
-      logger.info('Sesión cerrada exitosamente');
+      logger.info('Sesión cerrada exitosamente - conversation_id y mensajes limpiados');
     } catch (error) {
       logger.error('Error al cerrar sesión:', error);
       // Forzar logout local incluso si hay error
+      localStorage.removeItem('aws-credentials');
+      localStorage.removeItem('conversation-id');
+      localStorage.removeItem('chat-messages');
       setAuthState(defaultAuthState);
     }
   };

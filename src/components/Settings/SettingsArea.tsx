@@ -38,25 +38,61 @@ const SettingsArea: React.FC = () => {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-gray-50">
+    <div className="h-full overflow-y-auto p-6">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Configuración</h2>
-          <p className="text-gray-600">Personaliza los parámetros del chat y la búsqueda RAG</p>
+          <h2 
+            className="text-2xl font-bold mb-2"
+            style={{
+              background: 'linear-gradient(135deg, #319795 0%, #2c7a7b 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}
+          >
+            Configuración
+          </h2>
+          <p style={{ color: '#718096' }}>
+            Personaliza los parámetros del chat y la búsqueda RAG
+          </p>
         </div>
 
         {/* Configuración del Modelo */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Modelo de IA</h3>
+        <div 
+          className="rounded-lg p-6 transition-all"
+          style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#2d3748' }}>
+            Modelo de IA
+          </h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#2d3748' }}>
                 Seleccionar Modelo
               </label>
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                className="block w-full px-3 py-2 shadow-sm focus:outline-none"
+                style={{
+                  border: '2px solid rgba(0, 0, 0, 0.1)',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#319795';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(49, 151, 149, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+                  e.target.style.boxShadow = 'none';
+                }}
               >
                 {AVAILABLE_MODELS.map((model) => (
                   <option key={model.id} value={model.id}>
@@ -64,7 +100,7 @@ const SettingsArea: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs mt-1" style={{ color: '#a0aec0' }}>
                 {AVAILABLE_MODELS.find(m => m.id === selectedModel)?.description}
               </p>
             </div>
@@ -72,9 +108,19 @@ const SettingsArea: React.FC = () => {
         </div>
 
         {/* Configuración de Knowledge Base */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div 
+          className="rounded-lg p-6 transition-all"
+          style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Base de Conocimientos</h3>
+            <h3 className="text-lg font-semibold" style={{ color: '#2d3748' }}>
+              Base de Conocimientos
+            </h3>
             <button
               onClick={refreshKnowledgeBases}
               disabled={loadingKnowledgeBases}
@@ -163,8 +209,18 @@ const SettingsArea: React.FC = () => {
 
         {/* Perfil del Sistema */}
         {currentProfile && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Perfil del Sistema</h3>
+          <div 
+            className="rounded-lg p-6 transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            <h3 className="text-lg font-semibold mb-4" style={{ color: '#2d3748' }}>
+              Perfil del Sistema
+            </h3>
             <div className="space-y-4">
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <h4 className="text-base font-medium text-blue-900 mb-2">
@@ -194,8 +250,18 @@ const SettingsArea: React.FC = () => {
         )}
 
         {/* Parámetros de Búsqueda */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Parámetros de Búsqueda</h3>
+        <div 
+          className="rounded-lg p-6 transition-all"
+          style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#2d3748' }}>
+            Parámetros de Búsqueda
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -281,8 +347,18 @@ const SettingsArea: React.FC = () => {
         </div>
 
         {/* Información del Sistema */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Sistema</h3>
+        <div 
+          className="rounded-lg p-6 transition-all"
+          style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#2d3748' }}>
+            Información del Sistema
+          </h3>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Modelo Actual:</span>

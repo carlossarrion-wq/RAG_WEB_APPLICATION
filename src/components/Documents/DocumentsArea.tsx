@@ -485,32 +485,56 @@ const DocumentsArea: React.FC = () => {
 
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-gray-50">
+    <div className="h-full overflow-y-auto p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Documentos</h2>
-          <p className="text-gray-600">
+          <h2 
+            className="text-2xl font-bold mb-2"
+            style={{
+              background: 'linear-gradient(135deg, #319795 0%, #2c7a7b 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}
+          >
+            Documentos
+          </h2>
+          <p style={{ color: '#718096' }}>
             Visualiza y gestiona los documentos almacenados en la Knowledge Base seleccionada
           </p>
         </div>
 
         {/* Knowledge Base Info */}
         {currentKB && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div 
+            className="rounded-lg p-6 transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold" style={{ color: '#2d3748' }}>
                   Knowledge Base Actual
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm mt-1" style={{ color: '#718096' }}>
                   {currentKB.name}
                 </p>
               </div>
-              <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                currentKB.status === 'ACTIVE' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}>
+              <span 
+                className="px-4 py-2 text-sm font-semibold rounded-full"
+                style={{
+                  background: currentKB.status === 'ACTIVE' 
+                    ? 'rgba(56, 178, 172, 0.15)' 
+                    : 'rgba(237, 137, 54, 0.15)',
+                  color: currentKB.status === 'ACTIVE' 
+                    ? '#2c7a7b' 
+                    : '#dd6b20'
+                }}
+              >
                 {currentKB.status}
               </span>
             </div>
@@ -518,10 +542,18 @@ const DocumentsArea: React.FC = () => {
         )}
 
         {/* Data Sources and Documents */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div 
+          className="rounded-lg transition-all"
+          style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.1)' }}>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold" style={{ color: '#2d3748' }}>
                 Orígenes de Datos y Documentos
               </h3>
               <Button
@@ -537,8 +569,14 @@ const DocumentsArea: React.FC = () => {
 
           <div className="p-6">
             {error ? (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{error}</p>
+              <div 
+                className="p-4 rounded-xl"
+                style={{
+                  background: 'rgba(229, 62, 62, 0.1)',
+                  borderLeft: '4px solid #e53e3e'
+                }}
+              >
+                <p className="text-sm" style={{ color: '#c53030' }}>{error}</p>
                 <button
                   onClick={loadDataSources}
                   className="mt-2 text-sm text-red-700 hover:text-red-800 underline"
@@ -553,42 +591,63 @@ const DocumentsArea: React.FC = () => {
               </div>
             ) : dataSources.length === 0 ? (
               <div className="text-center py-8">
-                <div className="text-gray-400 text-4xl mb-4">📁</div>
-                <p className="text-gray-500">
+                  <div className="text-4xl mb-4" style={{ color: '#a0aec0' }}>📁</div>
+                <p style={{ color: '#718096' }}>
                   No se encontraron orígenes de datos en esta Knowledge Base
                 </p>
               </div>
             ) : (
               <div className="space-y-6">
                 {dataSources.map((dataSource, dataSourceIndex) => (
-                  <div key={dataSource.dataSourceId} className="border border-gray-200 rounded-lg">
+                  <div 
+                    key={dataSource.dataSourceId} 
+                    className="rounded-lg transition-all"
+                    style={{
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
                     {/* Data Source Header */}
-                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 rounded-t-lg">
+                    <div 
+                      className="px-4 py-3 rounded-t-lg"
+                      style={{
+                        background: 'rgba(49, 151, 149, 0.05)',
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
+                      }}
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="text-xl">🗂️</div>
                           <div>
-                            <h4 className="text-lg font-semibold text-gray-900">
+                            <h4 className="text-lg font-semibold" style={{ color: '#2d3748' }}>
                               {dataSource.name}
                             </h4>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm" style={{ color: '#718096' }}>
                               ID: {dataSource.dataSourceId}
                             </p>
                             {dataSource.description && (
-                              <p className="text-sm text-gray-600 mt-1">
+                              <p className="text-sm mt-1" style={{ color: '#718096' }}>
                                 {dataSource.description}
                               </p>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            dataSource.status === 'AVAILABLE' 
-                              ? 'bg-green-100 text-green-800'
-                              : dataSource.status === 'CREATING'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                          <span 
+                            className="px-3 py-1 text-xs font-semibold rounded-full"
+                            style={{
+                              background: dataSource.status === 'AVAILABLE' 
+                                ? 'rgba(56, 178, 172, 0.15)'
+                                : dataSource.status === 'CREATING'
+                                ? 'rgba(237, 137, 54, 0.15)'
+                                : 'rgba(229, 62, 62, 0.15)',
+                              color: dataSource.status === 'AVAILABLE' 
+                                ? '#2c7a7b'
+                                : dataSource.status === 'CREATING'
+                                ? '#dd6b20'
+                                : '#c53030'
+                            }}
+                          >
                             {dataSource.status}
                           </span>
                       <Button

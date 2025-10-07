@@ -1,6 +1,4 @@
 import type { 
-  KBQueryRequest, 
-  KBQueryResponse, 
   ConversationMessage, 
   APIError 
 } from '../types';
@@ -75,6 +73,13 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
       'x-api-key': appConfig.api.apiKey,
     };
     
+    // Incluir conversation_id desde localStorage
+    const conversationId = localStorage.getItem('conversation-id');
+    if (conversationId) {
+      headers['x-conversation-id'] = conversationId;
+      logger.debug('Conversation ID añadido a headers:', conversationId);
+    }
+    
     // Incluir información del usuario desde localStorage si está disponible
     const storedCredentials = localStorage.getItem('aws-credentials');
     if (storedCredentials) {
@@ -116,7 +121,8 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
           logger.debug('Headers de usuario añadidos:', {
             userName: headers['x-user-name'] || 'no disponible',
             person: headers['x-user-person'] || 'no disponible',
-            team: headers['x-user-team'] || 'no disponible'
+            team: headers['x-user-team'] || 'no disponible',
+            conversationId: headers['x-conversation-id'] || 'no disponible'
           });
         }
       } catch (parseError) {

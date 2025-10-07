@@ -119,14 +119,15 @@ class DatabaseLogger:
             event: Lambda event object
             
         Returns:
-            Dictionary with IAM username, ARN, group, person, and team
+            Dictionary with IAM username, ARN, group, person, team, and conversation_id
         """
         iam_info = {
             'username': 'unknown',
             'arn': None,
             'group': None,
             'person': None,
-            'team': None
+            'team': None,
+            'conversation_id': None
         }
         
         try:
@@ -144,8 +145,9 @@ class DatabaseLogger:
             iam_info['group'] = headers_lower.get('x-user-group')
             iam_info['person'] = headers_lower.get('x-user-person')
             iam_info['team'] = headers_lower.get('x-user-team')
+            iam_info['conversation_id'] = headers_lower.get('x-conversation-id')
             
-            logger.info(f"Extracted user info from headers: username={iam_info['username']}, person={iam_info['person']}, team={iam_info['team']}")
+            logger.info(f"Extracted user info from headers: username={iam_info['username']}, person={iam_info['person']}, team={iam_info['team']}, conversation_id={iam_info['conversation_id']}")
             
             # Fallback: Try to extract from request context if headers are not present
             if iam_info['username'] == 'unknown':
@@ -173,7 +175,7 @@ class DatabaseLogger:
                 if authorizer and 'principalId' in authorizer:
                     iam_info['username'] = authorizer['principalId']
             
-            logger.info(f"Final IAM info: username={iam_info['username']}, group={iam_info['group']}, person={iam_info['person']}, team={iam_info['team']}")
+            logger.info(f"Final IAM info: username={iam_info['username']}, group={iam_info['group']}, person={iam_info['person']}, team={iam_info['team']}, conversation_id={iam_info['conversation_id']}")
             
         except Exception as e:
             logger.error(f"Error extracting IAM info: {str(e)}")
@@ -229,18 +231,19 @@ class DatabaseLogger:
             with connection.cursor() as cursor:
                 sql = """
                     INSERT INTO query_logs (
-                        query_id, iam_username, iam_user_arn, iam_group,
+                        query_id, conversation_id, iam_username, iam_user_arn, iam_group,
                         person, team,
                         user_query, query_word_count, query_char_count,
                         model_id, knowledge_base_id, status,
                         lambda_request_id, api_gateway_request_id, source_ip,
                         tokens_used, request_timestamp
                     ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW()
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW()
                     )
                 """
                 cursor.execute(sql, (
                     query_id,
+                    iam_info.get('conversation_id'),  # Nuevo campo conversation_id
                     username_to_store,
                     iam_info['arn'],
                     group_to_store,
@@ -259,7 +262,7 @@ class DatabaseLogger:
                 ))
                 connection.commit()
                 
-            logger.info(f"Created query log with ID: {query_id} for user: {username_to_store} (person: {iam_info.get('person')}, team: {iam_info.get('team')})")
+            logger.info(f"Created query log with ID: {query_id} for user: {username_to_store} (person: {iam_info.get('person')}, team: {iam_info.get('team')}, conversation_id: {iam_info.get('conversation_id')})")
             return query_id
             
         except Exception as e:

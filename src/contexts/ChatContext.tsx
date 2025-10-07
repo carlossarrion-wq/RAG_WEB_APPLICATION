@@ -13,7 +13,17 @@ interface ChatContextType {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   resetConversation: () => void;
   addMessage: (message: Message) => void;
+  conversationId: string;
 }
+
+// Función para generar un UUID v4
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 const defaultMessages: Message[] = [
   {
@@ -40,6 +50,17 @@ interface ChatProviderProps {
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<Message[]>(defaultMessages);
+  const [conversationId, setConversationId] = useState<string>(() => {
+    // Intentar cargar conversation_id existente o generar uno nuevo
+    const savedConversationId = localStorage.getItem('conversation-id');
+    if (savedConversationId) {
+      return savedConversationId;
+    }
+    const newConversationId = generateUUID();
+    localStorage.setItem('conversation-id', newConversationId);
+    console.log('Nuevo conversation_id generado:', newConversationId);
+    return newConversationId;
+  });
 
   // Cargar mensajes del localStorage al inicializar
   useEffect(() => {
@@ -70,9 +91,16 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   }, [messages]);
 
   const resetConversation = () => {
+    // Generar nuevo conversation_id
+    const newConversationId = generateUUID();
+    setConversationId(newConversationId);
+    localStorage.setItem('conversation-id', newConversationId);
+    
+    // Resetear mensajes
     setMessages(defaultMessages);
     localStorage.removeItem('chat-messages');
-    console.log('Conversación reseteada - historial y mensajes borrados');
+    
+    console.log('Conversación reseteada - nuevo conversation_id:', newConversationId);
   };
 
   const addMessage = (message: Message) => {
@@ -84,6 +112,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     setMessages,
     resetConversation,
     addMessage,
+    conversationId,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
